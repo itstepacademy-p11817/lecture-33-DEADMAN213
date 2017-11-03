@@ -1,3 +1,4 @@
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
 #include <locale.h>
@@ -7,6 +8,8 @@
 #include <string.h>         
 #include <inttypes.h>
 
+const char* vowels = "уУеЕёЁыЫаАоОэЭяЯиИюЮ";
+const char* consonants = "йЙцЦкКнНгГшШщЩзЗхХфФвВпПрРлЛдДжЖчЧсСмМтТбБ";
 
 char* toSaltTransform(const char* intext) {
 	char* outtext = NULL;
@@ -16,6 +19,7 @@ char* toSaltTransform(const char* intext) {
 		if (strchr(vowels, *intext)) {
 			outtext = (char*)realloc(outtext, ind * sizeof(char) + 3);
 			*(outtext + ind++) = *intext;
+			*(outtext + ind++) = 'с';
 			*(outtext + ind++) = tolower(*intext);
 		}
 		else {
@@ -35,6 +39,7 @@ double saltMeasure(const char* intext) {
 	uint8_t vowelsLet = 0;
 
 	while (*(intext + 2)) {
+		if (strchr(vowels, *intext) && *(intext + 1) == 'с' && (*(intext + 2) == *intext || (char)toupper(*(intext + 2)) == *intext)) {
 			saltLet++;
 			vowelsLet++;
 			intext += 2;
@@ -63,6 +68,7 @@ char* toNormalTransform(const char* intext) {
 		outtext = (char*)realloc(outtext, ln * sizeof(char) + 1);
 		*(outtext + ln++) = *intext;
 
+		if (strchr(vowels, *intext) && *(intext + 1) == 'с' && (*(intext + 2) == *intext || (char)toupper(*(intext + 2)) == *intext)) {
 			intext += 3;
 		}
 		else {
@@ -80,6 +86,13 @@ uint8_t menu() {
 
 	system("cls");
 
+	printf("Меню:\n"); 
+	printf("1 - Печать текста.\n");
+	printf("2 - Перевод в соленый.\n");
+	printf("3 - Измеритель солености.\n");
+	printf("4 - Перевод в нормальный.\n");
+	printf("5 - Выход.\n");
+	printf("Выбор: ");
 	scanf("%hhu", &ch);
 
 	return ch;
@@ -92,6 +105,7 @@ void pass() {
 int main(void) {
 	setlocale(LC_ALL, "Russian");
 
+	const char* intext = { "Привет. У лукоморья дуб зеленый, златая цепь на дубе том висит. И днем и ночью кот ученый, всё ходит по цепи кругом." };
 	char* salttext = NULL;
 	uint8_t ch = 0;
 
@@ -99,10 +113,12 @@ int main(void) {
 		switch (ch) {
 		case 1:
 			if (intext) {
+				printf("\nИсходный текст: ");
 				puts(intext);
 			}
 
 			if (salttext) {
+				printf("\nСоленый текст: ");
 				puts(salttext);
 			}
 
@@ -110,16 +126,21 @@ int main(void) {
 
 		case 2:
 			salttext = toSaltTransform(intext);
+			printf("Соленый текст: ");
 			puts(salttext);
 			break;
 
 		case 3:
 			if (intext) {
+				printf("\nИсходный текст: ");
 				puts(intext);
+				printf("Процент солености: %.2f.\n", saltMeasure(intext));
 			}
 
 			if (salttext) {
+				printf("\nСоленый текст: ");
 				puts(salttext);
+				printf("Процент солености: %.2f.\n", saltMeasure(salttext));
 			}
 
 			break;
@@ -128,12 +149,14 @@ int main(void) {
 			char* txt = NULL;
 
 			if (intext) {
+				printf("\nПеревод исходного текста в нормальный: ");
 				txt = toNormalTransform(intext);
 				puts(txt);
 				free(txt);
 				txt = NULL;
 			}
 			if (salttext) {
+				printf("\nПеревод соленого текста в нормальный: ");
 				txt = toNormalTransform(salttext);
 				puts(txt);
 				free(txt);
@@ -144,10 +167,12 @@ int main(void) {
 		}
 
 		default:
+			printf("Неверный ввод.\n");
 			pass();
 			break;
 		}
 
+		printf("Нажмите любую клавишу.\n");
 		_getch();
 	}
 
